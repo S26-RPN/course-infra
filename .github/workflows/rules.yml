@@ -1,0 +1,38 @@
+name: Governance Logic
+on:
+  workflow_call:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Student Submission
+        uses: actions/checkout@v4
+        with:
+          path: submission
+          fetch-depth: 0
+
+      - name: Checkout Governance Tools
+        uses: actions/checkout@v4
+        with:
+          repository: S26-RPN/course-infra
+          path: infra
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Validation Dependencies
+        run: pip install typer rich ruff
+
+      - name: Enforce Structural Invariants
+        env:
+          IS_INSTRUCTOR: >-
+            ${{
+              contains(fromJSON('["reachpranjal", "soham2560", "github-classroom[bot]"]'), github.actor) ||
+              contains(vars.COURSE_STAFF, github.actor)
+            }}
+        run: |
+          echo "Actor: ${{ github.actor }}"
+          python infra/scripts/validate.py --path submission
